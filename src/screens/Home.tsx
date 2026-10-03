@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '../components/Typography';
 import { TxRow } from '../components/TxRow';
 import { Card, IconBubble } from '../components/ui';
 import { formatMoney } from '../config';
+import { notify } from '../notify';
 import { useStore } from '../store';
 
 type Icon = React.ComponentProps<typeof Ionicons>['name'];
@@ -31,7 +32,7 @@ export function Home({ go }: { go: (tab: Tab, preset?: SendPreset) => void }) {
   const run = (a: (typeof ACTIONS)[number]['action']) => {
     if (a === 'own' || a === 'bank') go('send', a);
     else if (a === 'activity' || a === 'monitor') go(a);
-    else Alert.alert('Not in the sandbox', 'Only transfers are simulated in this test app.');
+    else notify('Not in the sandbox', 'Only transfers are simulated in this test app.');
   };
 
   return (

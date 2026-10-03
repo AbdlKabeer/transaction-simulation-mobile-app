@@ -1,7 +1,11 @@
-import React from 'react';
-import { Alert, Pressable, ScrollView, Switch, View } from 'react-native';
+import React, { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, ScrollView, Switch, View } from 'react-native';
 import { Text } from '../components/Typography';
+import { JsonView } from '../components/JsonView';
 import { Badge, Button, Card, ScreenHeader, SectionTitle } from '../components/ui';
+import { confirm } from '../notify';
+import { SCENARIOS, summarise } from '../scenarios';
 import { formatMoney } from '../config';
 import { useStore } from '../store';
 import { RuleConfig } from '../types';
@@ -40,7 +44,9 @@ function RuleRow({ title, desc, enabled, onToggle, children }: {
 }
 
 export function Monitor() {
-  const { transactions, rules, setRules, resetRules, resetSession } = useStore();
+  const { transactions, rules, events, send, recordFailedPin, logScenario, setRules, resetRules, resetSession } = useStore();
+  const [lastRun, setLastRun] = useState('');
+  const [openEvent, setOpenEvent] = useState<string | null>(null);
   const alerts = transactions.filter((t) => t.decision !== 'ALLOWED');
   const set = <K extends keyof RuleConfig>(k: K, patch: Partial<RuleConfig[K]>) =>
     setRules({ ...rules, [k]: { ...(rules[k] as object), ...patch } });
@@ -50,6 +56,36 @@ export function Monitor() {
     <View className="flex-1">
     <ScreenHeader title="Monitoring" />
     <ScrollView className="flex-1" contentContainerClassName="p-5 pb-10">
+
+      <SectionTitle>Run a test scenario</SectionTitle>
+      <Card>
+        <Text className="mb-2 text-xs text-slate-500">One tap sends the transfers needed to trigger a rule. Results appear in Alerts below.</Text>
+        {!!lastRun && (
+          <View className="mb-2 rounded-xl bg-brand-50 p-3">
+            <Text className="text-sm font-medium text-brand-900">{lastRun}</Text>
+          </View>
+        )}
+        {SCENARIOS.map((sc) => (
+          <View key={sc.id} className="flex-row items-center border-b border-slate-100 py-3">
+            <View className="flex-1 pr-3">
+              <Text className="font-semibold text-slate-900">{sc.title}</Text>
+              <Text className="text-xs text-slate-500">{sc.desc}</Text>
+              <Text className="text-[11px] text-brand-600">Expect: {sc.expect}</Text>
+            </View>
+            <Pressable
+              onPress={() => {
+                const res = sc.run({ send, failPin: recordFailedPin, rules });
+                const msg = `${sc.title}: ${summarise(res)}`;
+                logScenario(`Scenario · ${sc.title}`);
+                setLastRun(msg);
+              }}
+              className="rounded-full bg-brand-600 px-4 py-2 active:opacity-80"
+            >
+              <Text className="text-sm font-semibold text-white">Run</Text>
+            </Pressable>
+          </View>
+        ))}
+      </Card>
 
       <SectionTitle>Alerts ({alerts.length})</SectionTitle>
       <Card>
@@ -99,6 +135,26 @@ export function Monitor() {
           onToggle={(v) => set('dailyLimit', { enabled: v })}>
           <Stepper value={rules.dailyLimit.limit} step={250_000} min={250_000} fmt={money} onChange={(n) => set('dailyLimit', { limit: n })} />
         </RuleRow>
+        <RuleRow title="Failed PIN attempts" desc="Repeated wrong PINs before a transfer" enabled={rules.failedPin.enabled}
+          onToggle={(v) => set('failedPin', { enabled: v })}>
+          <Stepper value={rules.failedPin.maxAttempts} step={1} min={1} fmt={(n) => `${n}+ in ${rules.failedPin.windowMinutes}m`} onChange={(n) => set('failedPin', { maxAttempts: n })} />
+        </RuleRow>
+        <RuleRow title="New device" desc="High value from an unrecognised device" enabled={rules.newDevice.enabled}
+          onToggle={(v) => set('newDevice', { enabled: v })}>
+          <Stepper value={rules.newDevice.threshold} step={50_000} min={0} fmt={(n) => `≥ ${money(n)}`} onChange={(n) => set('newDevice', { threshold: n })} />
+        </RuleRow>
+        <RuleRow title="Dormant account" desc="Inactive account suddenly sends money" enabled={rules.dormant.enabled}
+          onToggle={(v) => set('dormant', { enabled: v })}>
+          <Stepper value={rules.dormant.threshold} step={50_000} min={0} fmt={(n) => `≥ ${money(n)}`} onChange={(n) => set('dormant', { threshold: n })} />
+        </RuleRow>
+        <RuleRow title="Impossible travel" desc="Different countries in a short window" enabled={rules.geoVelocity.enabled}
+          onToggle={(v) => set('geoVelocity', { enabled: v })}>
+          <Stepper value={rules.geoVelocity.windowMinutes} step={15} min={15} fmt={(n) => `${n} min`} onChange={(n) => set('geoVelocity', { windowMinutes: n })} />
+        </RuleRow>
+        <RuleRow title="Unusual amount for payee" desc="Much bigger than usual for this payee" enabled={rules.payeeAnomaly.enabled}
+          onToggle={(v) => set('payeeAnomaly', { enabled: v })}>
+          <Stepper value={rules.payeeAnomaly.multiplier} step={1} min={2} fmt={(n) => `${n}x usual`} onChange={(n) => set('payeeAnomaly', { multiplier: n })} />
+        </RuleRow>
         <View className="mt-3 flex-row items-center justify-between">
           <Text className="text-sm text-slate-700">Flag at score</Text>
           <Stepper value={rules.flagScore} step={5} min={5} onChange={(n) => setRules({ ...rules, flagScore: Math.min(n, rules.blockScore) })} />
@@ -109,17 +165,40 @@ export function Monitor() {
         </View>
       </Card>
 
+      <SectionTitle>Event log ({events.length})</SectionTitle>
+      <Card>
+        {events.length === 0 ? (
+          <Text className="py-3 text-center text-slate-500">No events yet.</Text>
+        ) : (
+          events.slice(0, 30).map((e) => {
+            const open = openEvent === e.id;
+            return (
+              <View key={e.id} className="border-b border-slate-100 py-2.5">
+                <Pressable onPress={() => setOpenEvent(open ? null : e.id)} className="flex-row items-center justify-between">
+                  <View className="flex-1 pr-3">
+                    <Text className="text-[11px] font-bold uppercase text-slate-400">{e.type.replace('_', ' ')} · {new Date(e.at).toLocaleTimeString()}</Text>
+                    <Text className="text-sm text-slate-800">{e.summary}</Text>
+                  </View>
+                  {(e.request || e.response) && <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color="#94a3b8" />}
+                </Pressable>
+                {open && (
+                  <View className="mt-2">
+                    {e.request && <JsonView label="Request" data={e.request} />}
+                    {e.response && <JsonView label="Response" data={e.response} />}
+                  </View>
+                )}
+              </View>
+            );
+          })
+        )}
+      </Card>
+
       <View className="mt-4 gap-3">
         <Button title="Reset rules to defaults" variant="ghost" onPress={resetRules} />
         <Button
           title="Reset balance & history"
           variant="danger"
-          onPress={() =>
-            Alert.alert('Reset sandbox?', 'This clears all transactions and restores the starting balance.', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Reset', style: 'destructive', onPress: resetSession },
-            ])
-          }
+          onPress={() => confirm('Reset sandbox?', 'This clears all transactions and events and restores the starting balance.', 'Reset', resetSession)}
         />
       </View>
     </ScrollView>
