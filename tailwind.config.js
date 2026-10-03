@@ -5,7 +5,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: { 50: '#eef6ff', 100: '#d9eaff', 500: '#1d6df2', 600: '#1558cc', 700: '#0f43a0', 900: '#0a2a66' },
+        brand: {
+          50: '#E8FCFB',
+          100: '#CFE0F5', // light text on navy/blue surfaces
+          500: '#3DB0A4',
+          600: '#309D92', // primary action (teal)
+          700: '#224683', // blue
+          900: '#101944', // navy
+        },
+        app: '#F9FAFB',
       },
     },
   },

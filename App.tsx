@@ -26,7 +26,7 @@ function Shell() {
   if (!account) return <Login />;
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
+    <SafeAreaView className="flex-1 bg-app">
       <View className="flex-row items-center justify-between bg-white px-5 py-3 border-b border-slate-100">
         <Text className="text-lg font-extrabold text-brand-700">Nova Bank <Text className="text-xs font-semibold text-amber-600">SANDBOX</Text></Text>
         <Pressable onPress={logout}><Text className="text-sm text-slate-500">Log out</Text></Pressable>

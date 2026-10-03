@@ -15,7 +15,7 @@ export function Home({ go }: { go: (tab: 'send' | 'activity' | 'monitor') => voi
       <Text className="text-base text-slate-500">Welcome back,</Text>
       <Text className="mb-4 text-2xl font-bold text-slate-900">{account.name}</Text>
 
-      <View className="rounded-3xl bg-brand-600 p-5">
+      <View className="rounded-3xl bg-brand-700 p-5">
         <Text className="text-sm text-brand-100">Available balance</Text>
         <Text className="mt-1 text-4xl font-extrabold text-white">{formatMoney(account.balance)}</Text>
         <Text className="mt-3 text-xs text-brand-100">Account {account.accountNumber} · Savings</Text>

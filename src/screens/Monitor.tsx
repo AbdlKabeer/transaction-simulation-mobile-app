@@ -31,7 +31,7 @@ function RuleRow({ title, desc, enabled, onToggle, children }: {
           <Text className="font-semibold text-slate-900">{title}</Text>
           <Text className="text-xs text-slate-500">{desc}</Text>
         </View>
-        <Switch value={enabled} onValueChange={onToggle} />
+        <Switch value={enabled} onValueChange={onToggle} trackColor={{ true: "#309D92", false: "#cbd5e1" }} thumbColor="#ffffff" />
       </View>
       {enabled && !!children && <View className="mt-2 flex-row items-center justify-end">{children}</View>}
     </View>
