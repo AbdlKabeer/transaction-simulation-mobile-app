@@ -21,6 +21,8 @@ npx tsc --noEmit   # typecheck
 - Sending to a new account number creates a new beneficiary, which can trigger the new-beneficiary rule.
 - **Test conditions** on the amount step: channel, time of day, originating country.
 - Every transfer is scored by `src/engine.ts` and ends ALLOWED / FLAGGED / BLOCKED, with the triggered rules shown.
+- **Run a test scenario**: one tap per rule on the Monitoring tab sends the transfers needed to trigger it.
+- **Event log**: every transaction and failed PIN with the raw request/response JSON (also on each receipt).
 - **Monitoring** tab: alert list, per-rule toggles and thresholds, score cut-offs, reset buttons.
 
 ## Rules (defaults in `src/config.ts`)
@@ -34,5 +36,10 @@ npx tsc --noEmit   # typecheck
 | Unusual hours | ≥ ₦100,000 between 00:00–05:00 | 30 |
 | High-risk country | Iran, North Korea, Syria, Myanmar, Russia | 60 |
 | Daily limit | > ₦1,000,000 per day | 40 |
+| Failed PIN | 3+ wrong PINs in 10 min before a transfer | 35 |
+| New device | ≥ ₦100,000 from an unrecognised device (test condition) | 30 |
+| Dormant account | ≥ ₦100,000 from an account inactive 180+ days (test condition) | 35 |
+| Impossible travel | Transfers from two countries within 60 min | 40 |
+| Unusual amount for payee | ≥ 5x the average sent to that payee (after 2+ prior) | 30 |
 
-Scores add up (cap 100): ≥ 40 flagged, ≥ 80 blocked (blocked transfers don't debit the balance).
+Scores add up (cap 100): ≥ 30 flagged, ≥ 80 blocked (blocked transfers don't debit the balance).

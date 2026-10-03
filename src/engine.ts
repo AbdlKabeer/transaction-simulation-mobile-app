@@ -9,6 +9,9 @@ export interface Candidate {
   country: string;
   /** Real wall-clock time, used for beneficiary age (effectiveAt may be simulated). */
   now: number;
+  /** Sandbox test conditions. */
+  newDevice: boolean;
+  dormant: boolean;
 }
 
 const MIN = 60_000;
@@ -23,6 +26,7 @@ export function evaluate(
   c: Candidate,
   history: Transaction[],
   cfg: RuleConfig,
+  failedPins: number[] = [],
 ): { decision: Decision; riskScore: number; hits: RuleHit[] } {
   const hits: RuleHit[] = [];
   // Blocked transfers don't move money, so they don't count toward behavioural rules.
@@ -114,6 +118,65 @@ export function evaluate(
         detail: `Day total ${formatMoney(total)} exceeds ${formatMoney(cfg.dailyLimit.limit)}.`,
         score: 40,
       });
+    }
+  }
+
+  if (cfg.failedPin.enabled) {
+    const since = c.now - cfg.failedPin.windowMinutes * MIN;
+    const n = failedPins.filter((t) => t >= since).length;
+    if (n >= cfg.failedPin.maxAttempts) {
+      hits.push({
+        ruleId: 'FAILED_PIN',
+        title: 'Repeated failed PIN',
+        detail: `${n} incorrect PIN attempts in the last ${cfg.failedPin.windowMinutes} minutes.`,
+        score: 35,
+      });
+    }
+  }
+
+  if (cfg.newDevice.enabled && c.newDevice && c.amount >= cfg.newDevice.threshold) {
+    hits.push({
+      ruleId: 'NEW_DEVICE',
+      title: 'New device, high value',
+      detail: `Unrecognised device used for a transfer of ${formatMoney(c.amount)}.`,
+      score: 30,
+    });
+  }
+
+  if (cfg.dormant.enabled && c.dormant && c.amount >= cfg.dormant.threshold) {
+    hits.push({
+      ruleId: 'DORMANT_ACCOUNT',
+      title: 'Dormant account reactivated',
+      detail: `Account inactive for 180+ days, now sending ${formatMoney(c.amount)}.`,
+      score: 35,
+    });
+  }
+
+  if (cfg.geoVelocity.enabled) {
+    const w = cfg.geoVelocity.windowMinutes * MIN;
+    const other = past.find((t) => t.country !== c.country && Math.abs(t.effectiveAt - c.effectiveAt) <= w);
+    if (other) {
+      hits.push({
+        ruleId: 'IMPOSSIBLE_TRAVEL',
+        title: 'Impossible travel',
+        detail: `Previous transfer from ${other.country} within ${cfg.geoVelocity.windowMinutes} minutes; now ${c.country}.`,
+        score: 40,
+      });
+    }
+  }
+
+  if (cfg.payeeAnomaly.enabled) {
+    const prior = past.filter((t) => t.beneficiaryId === c.beneficiary.id);
+    if (prior.length >= 2) {
+      const avg = prior.reduce((sum, t) => sum + t.amount, 0) / prior.length;
+      if (c.amount >= avg * cfg.payeeAnomaly.multiplier) {
+        hits.push({
+          ruleId: 'PAYEE_ANOMALY',
+          title: 'Unusual amount for payee',
+          detail: `${formatMoney(c.amount)} is ${cfg.payeeAnomaly.multiplier}x+ the usual ${formatMoney(avg)} sent to ${c.beneficiary.name}.`,
+          score: 30,
+        });
+      }
     }
   }
 

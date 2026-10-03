@@ -14,7 +14,12 @@ export const DEFAULT_RULES: RuleConfig = {
   oddHours: { enabled: true, fromHour: 0, toHour: 5, threshold: 100_000 },
   highRiskCountry: { enabled: true },
   dailyLimit: { enabled: true, limit: 1_000_000 },
-  flagScore: 40,
+  failedPin: { enabled: true, maxAttempts: 3, windowMinutes: 10 },
+  newDevice: { enabled: true, threshold: 100_000 },
+  dormant: { enabled: true, threshold: 100_000 },
+  geoVelocity: { enabled: true, windowMinutes: 60 },
+  payeeAnomaly: { enabled: true, multiplier: 5 },
+  flagScore: 30,
   blockScore: 80,
 };
 

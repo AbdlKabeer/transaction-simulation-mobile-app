@@ -32,6 +32,7 @@ async function transfer({ recent, bank, acct, amount, country, hour, shots }) {
   if (shots) await shot(`${shots}-6-processing`);
   await p.waitForTimeout(1300);
   if (shots) await shot(`${shots}-7-receipt`);
+  if (shots) { await click('Raw monitoring request / response'); await p.mouse.wheel(0, 2000); await p.waitForTimeout(300); await shot(`${shots}-8-receipt-json`); await p.mouse.wheel(0, -5000); }
   await click('Done');
 }
 
@@ -49,6 +50,9 @@ await transfer({ bank: 'Kuda', acct: '5566778899', amount: '300000', country: 'I
 
 await tab('Home'); await shot('06-home-with-activity');
 await tab('Activity'); await shot('07-activity');
-await tab('Monitoring'); await shot('08-monitoring-alerts');
-await p.mouse.wheel(0, 900); await p.waitForTimeout(300); await shot('09-monitoring-rules');
+await tab('Monitoring'); await shot('08-monitoring-scenarios');
+await p.getByText('Run', { exact: true }).nth(8).click(); await p.waitForTimeout(300); await shot('09-scenario-result');
+await p.getByText(/^Alerts \(/).scrollIntoViewIfNeeded(); await p.waitForTimeout(300); await shot('10-monitoring-alerts');
+await p.getByText('Rules', { exact: true }).scrollIntoViewIfNeeded(); await p.waitForTimeout(300); await shot('11-monitoring-rules');
+await p.getByText(/^Event log \(/).scrollIntoViewIfNeeded(); await p.getByText(/^TRANSACTION/).first().click(); await p.mouse.wheel(0, 250); await p.waitForTimeout(300); await shot('12-event-log');
 await b.close();

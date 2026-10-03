@@ -5,6 +5,7 @@ import { Text, TextInput } from '../components/Typography';
 import { Badge, Button, Card, Chip, IconBubble, PinPad, ScreenHeader } from '../components/ui';
 import { BANKS, COUNTRIES, DEMO_PIN, formatMoney, resolveAccountName } from '../config';
 import { useStore } from '../store';
+import { JsonView } from '../components/JsonView';
 import { Channel, Transaction } from '../types';
 import { SendPreset } from './Home';
 
@@ -23,7 +24,7 @@ const Label = ({ children }: { children: React.ReactNode }) => (
 );
 
 export function Send({ preset }: { preset?: SendPreset }) {
-  const { beneficiaries, send, account } = useStore();
+  const { beneficiaries, send, account, recordFailedPin } = useStore();
   const [step, setStep] = useState<Step>('recipient');
   const [bank, setBank] = useState(preset === 'own' ? 'Prembly Bank' : '');
   const [acct, setAcct] = useState('');
@@ -33,6 +34,8 @@ export function Send({ preset }: { preset?: SendPreset }) {
   const [channel, setChannel] = useState<Channel>('MOBILE');
   const [country, setCountry] = useState('Nigeria');
   const [hour, setHour] = useState<number | null>(null);
+  const [newDevice, setNewDevice] = useState(false);
+  const [dormant, setDormant] = useState(false);
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState('');
   const [error, setError] = useState('');
@@ -50,6 +53,7 @@ export function Send({ preset }: { preset?: SendPreset }) {
     if (step !== 'pin' || pin.length !== 4) return;
     if (pin === DEMO_PIN) { setStep('processing'); return; }
     setPinError('Incorrect PIN. Try again.');
+    recordFailedPin();
     const t = setTimeout(() => setPin(''), 400);
     return () => clearTimeout(t);
   }, [pin, step]);
@@ -60,7 +64,7 @@ export function Send({ preset }: { preset?: SendPreset }) {
     const t = setTimeout(() => {
       const out = send({
         recipient: { name, bank, accountNumber: acct },
-        amount: amt, narration, channel, country, simulatedHour: hour,
+        amount: amt, narration, channel, country, simulatedHour: hour, newDevice, dormant,
       });
       if (typeof out === 'string') { setError(out); setPin(''); setStep('amount'); }
       else { setTx(out); setStep('receipt'); }
@@ -180,6 +184,16 @@ export function Send({ preset }: { preset?: SendPreset }) {
             <View className="flex-row flex-wrap">
               {COUNTRIES.map((c) => <Chip key={c} label={c} active={c === country} onPress={() => setCountry(c)} />)}
             </View>
+            <Text className="mb-1 text-xs font-semibold text-slate-700">Device</Text>
+            <View className="flex-row flex-wrap">
+              <Chip label="Usual device" active={!newDevice} onPress={() => setNewDevice(false)} />
+              <Chip label="New device" active={newDevice} onPress={() => setNewDevice(true)} />
+            </View>
+            <Text className="mb-1 text-xs font-semibold text-slate-700">Account status</Text>
+            <View className="flex-row flex-wrap">
+              <Chip label="Active" active={!dormant} onPress={() => setDormant(false)} />
+              <Chip label="Dormant (180+ days)" active={dormant} onPress={() => setDormant(true)} />
+            </View>
           </Card>
 
           {!!error && <Text className="mt-3 text-sm font-medium text-red-600">{error}</Text>}
@@ -258,6 +272,7 @@ export function Send({ preset }: { preset?: SendPreset }) {
 }
 
 export function Receipt({ tx, onDone }: { tx: Transaction; onDone: () => void }) {
+  const [raw, setRaw] = useState(false);
   const meta = {
     ALLOWED: { icon: 'checkmark-circle', color: '#16a34a', title: 'Transfer successful' },
     FLAGGED: { icon: 'checkmark-circle', color: '#d97706', title: 'Transfer sent — under review' },
@@ -311,6 +326,16 @@ export function Receipt({ tx, onDone }: { tx: Transaction; onDone: () => void })
             ))
           )}
         </Card>
+        <Pressable onPress={() => setRaw(!raw)} className="mt-4 flex-row items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3">
+          <Text className="font-semibold text-brand-900">Raw monitoring request / response</Text>
+          <Ionicons name={raw ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
+        </Pressable>
+        {raw && (
+          <View className="mt-2">
+            <JsonView label="Request" data={tx.request} />
+            <JsonView label="Response" data={tx.response} />
+          </View>
+        )}
         <View className="mt-5"><Button title="Done" onPress={onDone} /></View>
       </ScrollView>
     </View>

@@ -31,6 +31,11 @@ export interface Transaction {
   decision: Decision;
   riskScore: number;
   hits: RuleHit[];
+  newDevice: boolean;
+  dormant: boolean;
+  /** Payload the app sent to monitoring and what came back (shown in the event log). */
+  request: Record<string, unknown>;
+  response: Record<string, unknown>;
 }
 
 export interface RuleConfig {
@@ -41,6 +46,11 @@ export interface RuleConfig {
   oddHours: { enabled: boolean; fromHour: number; toHour: number; threshold: number };
   highRiskCountry: { enabled: boolean };
   dailyLimit: { enabled: boolean; limit: number };
+  failedPin: { enabled: boolean; maxAttempts: number; windowMinutes: number };
+  newDevice: { enabled: boolean; threshold: number };
+  dormant: { enabled: boolean; threshold: number };
+  geoVelocity: { enabled: boolean; windowMinutes: number };
+  payeeAnomaly: { enabled: boolean; multiplier: number };
   flagScore: number;
   blockScore: number;
 }
@@ -50,4 +60,13 @@ export interface Account {
   email: string;
   accountNumber: string;
   balance: number;
+}
+
+export interface LogEvent {
+  id: string;
+  at: number;
+  type: 'TRANSACTION' | 'FAILED_PIN' | 'SCENARIO';
+  summary: string;
+  request?: Record<string, unknown>;
+  response?: Record<string, unknown>;
 }
