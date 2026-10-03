@@ -9,6 +9,7 @@
 // No secret API key is ever in this app.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PremblyTM, type DeviceSession } from 'prembly-tm-native';
+import * as Location from 'expo-location';
 import { getCurrency } from './config';
 
 const STORAGE_KEY = 'prembly-tm-connection-v1';
@@ -124,7 +125,15 @@ export async function connect(
       return { ok: false, message: 'Signed in, but the backend did not return an SDK public key. Is the backend up to date?' };
     }
 
-    PremblyTM.init({ publishableKey: data.sdk_public_key, baseUrl: config.baseUrl, debug: __DEV__ });
+    let locationEnabled = false;
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      locationEnabled = status === 'granted';
+    } catch (e) {
+      // safely ignore if permission request fails
+    }
+
+    PremblyTM.init({ publishableKey: data.sdk_public_key, baseUrl: config.baseUrl, location: locationEnabled, debug: __DEV__ });
     PremblyTM.reset();
     connection = config;
     simulationSession = data.session_id;
