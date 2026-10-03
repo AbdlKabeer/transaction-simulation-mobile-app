@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { Text } from '../components/Typography';
 import { TxRow } from '../components/TxRow';
 import { Card, IconBubble } from '../components/ui';
 import { formatMoney } from '../config';

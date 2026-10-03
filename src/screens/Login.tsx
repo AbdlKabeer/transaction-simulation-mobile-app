@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../components/Typography';
 import { Button, Field } from '../components/ui';
 import { useStore } from '../store';
 

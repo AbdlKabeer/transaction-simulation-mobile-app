@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { Text } from '../components/Typography';
 import { TxRow } from '../components/TxRow';
 import { Card, ScreenHeader } from "../components/ui";
 import { useStore } from '../store';

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Switch, View } from 'react-native';
+import { Text } from '../components/Typography';
 import { Badge, Button, Card, ScreenHeader, SectionTitle } from '../components/ui';
 import { formatMoney } from '../config';
 import { useStore } from '../store';

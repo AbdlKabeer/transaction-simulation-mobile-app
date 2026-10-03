@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from './Typography';
 import { formatMoney } from '../config';
 import { Transaction } from '../types';
 import { Badge } from './ui';

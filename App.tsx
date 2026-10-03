@@ -1,8 +1,17 @@
 import './global.css';
 import { Ionicons } from '@expo/vector-icons';
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+  useFonts,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from './src/components/Typography';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Activity } from './src/screens/Activity';
 import { Home, SendPreset, Tab } from './src/screens/Home';
@@ -21,11 +30,18 @@ const TABS: { key: Tab; label: string; icon: Icon; active: Icon }[] = [
 
 function Shell() {
   const { account, ready } = useStore();
+  const [fontsLoaded, fontError] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+  });
   const [tab, setTab] = useState<Tab>('home');
   const [preset, setPreset] = useState<SendPreset>(undefined);
   const [sendKey, setSendKey] = useState(0);
 
-  if (!ready) return <View className="flex-1 bg-brand-900" />;
+  if (!ready || !(fontsLoaded || fontError)) return <View className="flex-1 bg-brand-900" />;
   if (!account) return <Login />;
 
   const go = (t: Tab, p?: SendPreset) => {

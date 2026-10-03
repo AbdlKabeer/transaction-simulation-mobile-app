@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { Text, TextInput } from '../components/Typography';
 import { Badge, Button, Card, Chip, IconBubble, PinPad, ScreenHeader } from '../components/ui';
 import { BANKS, COUNTRIES, DEMO_PIN, formatMoney, resolveAccountName } from '../config';
 import { useStore } from '../store';
@@ -143,7 +144,7 @@ export function Send({ preset }: { preset?: SendPreset }) {
               <Text className="mr-2 text-3xl font-bold text-brand-900">₦</Text>
               <TextInput
                 value={amount} onChangeText={setAmount} keyboardType="numeric" placeholder="0.00" placeholderTextColor="#cbd5e1"
-                className="flex-1 text-3xl font-bold text-brand-900"
+                className="min-w-0 flex-1 text-3xl font-bold text-brand-900"
               />
             </View>
             <Text className="mt-2 text-xs text-slate-500">Balance {account ? formatMoney(account.balance) : ''}</Text>
