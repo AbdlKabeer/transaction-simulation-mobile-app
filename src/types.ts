@@ -16,6 +16,22 @@ export interface RuleHit {
   score: number;
 }
 
+/** Result of screening a transfer with Prembly's backend (and the SDK's device session). */
+export interface PremblyResult {
+  status: 'pending' | 'done' | 'error';
+  decision?: string;
+  riskScore?: number;
+  riskLevel?: string;
+  rules: { name: string; severity?: string }[];
+  deviceSessionId: string | null;
+  deviceSessionUsed?: boolean;
+  deviceSessionReason?: string;
+  sdkError?: string;
+  error?: string;
+  request?: Record<string, unknown>;
+  response?: Record<string, unknown> | null;
+}
+
 export interface Transaction {
   id: string;
   createdAt: number; // real time the user pressed send
@@ -36,6 +52,8 @@ export interface Transaction {
   /** Payload the app sent to monitoring and what came back (shown in the event log). */
   request: Record<string, unknown>;
   response: Record<string, unknown>;
+  /** Present once the transfer was also sent to Prembly's backend. */
+  prembly?: PremblyResult;
 }
 
 export interface RuleConfig {
@@ -60,12 +78,14 @@ export interface Account {
   email: string;
   accountNumber: string;
   balance: number;
+  /** The organisation's currency code, set at sign-in. */
+  currency?: string;
 }
 
 export interface LogEvent {
   id: string;
   at: number;
-  type: 'TRANSACTION' | 'FAILED_PIN' | 'SCENARIO';
+  type: 'TRANSACTION' | 'FAILED_PIN' | 'SCENARIO' | 'PREMBLY';
   summary: string;
   request?: Record<string, unknown>;
   response?: Record<string, unknown>;

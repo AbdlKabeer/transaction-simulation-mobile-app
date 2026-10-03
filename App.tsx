@@ -9,7 +9,7 @@ import {
   useFonts,
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Text } from './src/components/Typography';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +18,7 @@ import { Home, SendPreset, Tab } from './src/screens/Home';
 import { Login } from './src/screens/Login';
 import { Monitor } from './src/screens/Monitor';
 import { Send } from './src/screens/Send';
+import { connect, disconnect, isConnected, loadConnection } from './src/prembly';
 import { StoreProvider, useStore } from './src/store';
 
 type Icon = React.ComponentProps<typeof Ionicons>['name'];
@@ -41,7 +42,22 @@ function Shell() {
   const [preset, setPreset] = useState<SendPreset>(undefined);
   const [sendKey, setSendKey] = useState(0);
 
-  if (!ready || !(fontsLoaded || fontError)) return <View className="flex-1 bg-brand-900" />;
+  // Signed in: reconnect to Prembly (and start the device SDK) with the saved credentials, if the
+  // app was restarted. Signed out: drop the connection and the saved credentials.
+  useEffect(() => {
+    if (!ready) return;
+    if (!account) {
+      disconnect();
+      return;
+    }
+    if (!isConnected()) {
+      loadConnection().then((saved) => {
+        if (saved?.username) connect(saved);
+      });
+    }
+  }, [ready, account]);
+
+  if (!ready || !(fontsLoaded || fontError)) return <View className="flex-1 bg-brand-600" />;
   if (!account) return <Login />;
 
   const go = (t: Tab, p?: SendPreset) => {

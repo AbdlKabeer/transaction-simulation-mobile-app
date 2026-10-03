@@ -53,7 +53,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: 'midnight',
     title: 'Midnight transfer',
-    desc: 'A ₦150,000 transfer at 02:00.',
+    desc: 'A transfer of 150,000 at 02:00.',
     expect: 'Unusual hour',
     run: ({ send }) => [send({ ...base, recipient: KNOWN, amount: 150_000, simulatedHour: 2 })],
   },

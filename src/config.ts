@@ -1,6 +1,24 @@
 import { RuleConfig } from './types';
 
-export const CURRENCY = '₦';
+// The organisation's currency (a 3-letter code such as NGN, USD or GBP). It is set at sign-in from
+// the organisation's settings in Prembly, and every amount in the app is shown in it.
+let currencyCode = 'NGN';
+export const setCurrency = (code?: string | null) => {
+  const next = (code ?? '').trim().toUpperCase();
+  if (/^[A-Z]{3}$/.test(next)) currencyCode = next;
+};
+export const getCurrency = () => currencyCode;
+
+// Symbols for common currencies. Looked up here, not with Intl, because React Native's JavaScript
+// engine does not reliably support currency symbols.
+const SYMBOLS: Record<string, string> = {
+  NGN: '₦', USD: '$', GBP: '£', EUR: '€', GHS: 'GH₵', KES: 'KSh ', ZAR: 'R', UGX: 'USh ', TZS: 'TSh ',
+  XOF: 'CFA ', XAF: 'FCFA ', CAD: 'CA$', AUD: 'A$', INR: '₹', CNY: '¥', JPY: '¥', AED: 'AED ', EGP: 'E£',
+  RWF: 'RF ', ZMW: 'ZK', MAD: 'MAD ',
+};
+
+/** The symbol for the current currency, for example ₦, $ or £. Other currencies show their code. */
+export const currencySymbol = (): string => SYMBOLS[currencyCode] ?? `${currencyCode} `;
 export const STARTING_BALANCE = 2_000_000;
 
 export const HIGH_RISK_COUNTRIES = ['Iran', 'North Korea', 'Syria', 'Myanmar', 'Russia'];
@@ -29,8 +47,12 @@ export const SEED_BENEFICIARIES = [
   { id: 'b3', name: 'Sunrise Supplies Ltd', bank: 'Access Bank', accountNumber: '1029384756' },
 ];
 
+/** An amount in the organisation's currency, for example ₦2,000,000.00 or $2,000,000.00. */
 export const formatMoney = (n: number) =>
-  `${CURRENCY}${n.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  `${currencySymbol()}${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+/** A whole amount without decimals, for chips and hints: ₦5,000. */
+export const formatMoneyShort = (n: number) => `${currencySymbol()}${n.toLocaleString('en-US')}`;
 
 export const DEMO_PIN = '1234';
 

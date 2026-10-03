@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, Switch, View } from 'react-native';
 import { Text } from '../components/Typography';
 import { JsonView } from '../components/JsonView';
+import { PremblyDeviceSignals } from '../components/PremblyPanels';
 import { Badge, Button, Card, ScreenHeader, SectionTitle } from '../components/ui';
 import { confirm } from '../notify';
 import { SCENARIOS, summarise } from '../scenarios';
@@ -56,6 +57,9 @@ export function Monitor() {
     <View className="flex-1">
     <ScreenHeader title="Monitoring" />
     <ScrollView className="flex-1" contentContainerClassName="p-5 pb-10">
+
+      <SectionTitle>Device SDK</SectionTitle>
+      <PremblyDeviceSignals />
 
       <SectionTitle>Run a test scenario</SectionTitle>
       <Card>

@@ -4,7 +4,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '../components/Typography';
 import { TxRow } from '../components/TxRow';
 import { Card, IconBubble } from '../components/ui';
-import { formatMoney } from '../config';
+import { currencySymbol, formatMoney, formatMoneyShort } from '../config';
 import { notify } from '../notify';
 import { useStore } from '../store';
 
@@ -61,7 +61,7 @@ export function Home({ go }: { go: (tab: Tab, preset?: SendPreset) => void }) {
             <Ionicons name={hidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="#CFE0F5" />
           </Pressable>
         </View>
-        <Text className="mt-1 text-4xl font-extrabold text-white">{hidden ? '₦ ••••••' : formatMoney(account.balance)}</Text>
+        <Text className="mt-1 text-4xl font-extrabold text-white">{hidden ? `${currencySymbol()} ••••••` : formatMoney(account.balance)}</Text>
         <View className="mt-4 flex-row items-center justify-between">
           <Text className="text-xs text-brand-100">Prembly Bank · {account.accountNumber}</Text>
           <Pressable onPress={() => go('send')} className="flex-row items-center rounded-full bg-brand-600 px-4 py-2">
@@ -87,7 +87,7 @@ export function Home({ go }: { go: (tab: Tab, preset?: SendPreset) => void }) {
       <Pressable onPress={() => go('send')} className="mx-5 mt-4 flex-row items-center rounded-2xl bg-brand-900 p-4">
         <View className="flex-1 pr-3">
           <Text className="text-base font-bold text-white">Test the monitoring rules</Text>
-          <Text className="mt-0.5 text-xs text-brand-100">Try a ₦600,000 transfer, five quick transfers, or a 2am payment.</Text>
+          <Text className="mt-0.5 text-xs text-brand-100">Try a {formatMoneyShort(600_000)} transfer, five quick transfers, or a 2am payment.</Text>
         </View>
         <Ionicons name="arrow-forward-circle" size={32} color="#309D92" />
       </Pressable>

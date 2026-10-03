@@ -3,9 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { Text, TextInput } from '../components/Typography';
 import { Badge, Button, Card, Chip, IconBubble, PinPad, ScreenHeader } from '../components/ui';
-import { BANKS, COUNTRIES, DEMO_PIN, formatMoney, resolveAccountName } from '../config';
+import { BANKS, COUNTRIES, currencySymbol, DEMO_PIN, formatMoney, formatMoneyShort, resolveAccountName } from '../config';
 import { useStore } from '../store';
 import { JsonView } from '../components/JsonView';
+import { PremblyResultCard } from '../components/PremblyPanels';
+import { isConnected, screenTransfer } from '../prembly';
 import { Channel, Transaction } from '../types';
 import { SendPreset } from './Home';
 
@@ -24,7 +26,7 @@ const Label = ({ children }: { children: React.ReactNode }) => (
 );
 
 export function Send({ preset }: { preset?: SendPreset }) {
-  const { beneficiaries, send, account, recordFailedPin } = useStore();
+  const { beneficiaries, send, account, recordFailedPin, attachPrembly, transactions } = useStore();
   const [step, setStep] = useState<Step>('recipient');
   const [bank, setBank] = useState(preset === 'own' ? 'Prembly Bank' : '');
   const [acct, setAcct] = useState('');
@@ -67,13 +69,38 @@ export function Send({ preset }: { preset?: SendPreset }) {
         amount: amt, narration, channel, country, simulatedHour: hour, newDevice, dormant,
       });
       if (typeof out === 'string') { setError(out); setPin(''); setStep('amount'); }
-      else { setTx(out); setStep('receipt'); }
+      else {
+        setTx(out);
+        setStep('receipt');
+        // Also screen the transfer with Prembly's backend, with this phone's SDK device session.
+        if (account && isConnected()) {
+          attachPrembly(out.id, { status: 'pending', rules: [], deviceSessionId: null });
+          screenTransfer({
+            transactionId: out.id,
+            amount: out.amount,
+            account: { accountNumber: account.accountNumber, name: account.name },
+            beneficiary: { name, bank, accountNumber: acct },
+            narration, channel, country,
+          }).then((r) =>
+            attachPrembly(out.id, {
+              status: r.error ? 'error' : 'done',
+              decision: r.decision, riskScore: r.riskScore, riskLevel: r.riskLevel, rules: r.rules,
+              deviceSessionId: r.deviceSession.deviceSessionId,
+              deviceSessionUsed: r.deviceSessionUsed, deviceSessionReason: r.deviceSessionReason,
+              sdkError: r.deviceSession.error,
+              error: r.error, request: r.request, response: r.response,
+            }),
+          );
+        }
+      }
     }, 1100);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
-  if (step === 'receipt' && tx) return <Receipt tx={tx} onDone={reset} />;
+  // Show the live copy, so the Prembly result appears when it arrives.
+  const liveTx = tx ? (transactions.find((t) => t.id === tx.id) ?? tx) : null;
+  if (step === 'receipt' && liveTx) return <Receipt tx={liveTx} onDone={reset} />;
 
   if (step === 'processing')
     return (
@@ -145,7 +172,7 @@ export function Send({ preset }: { preset?: SendPreset }) {
           <Card className="mt-4">
             <Label>Amount</Label>
             <View className="flex-row items-center border-b border-slate-200 pb-2">
-              <Text className="mr-2 text-3xl font-bold text-brand-900">₦</Text>
+              <Text className="mr-2 text-3xl font-bold text-brand-900">{currencySymbol()}</Text>
               <TextInput
                 value={amount} onChangeText={setAmount} keyboardType="numeric" placeholder="0.00" placeholderTextColor="#cbd5e1"
                 className="min-w-0 flex-1 text-3xl font-bold text-brand-900"
@@ -154,7 +181,7 @@ export function Send({ preset }: { preset?: SendPreset }) {
             <Text className="mt-2 text-xs text-slate-500">Balance {account ? formatMoney(account.balance) : ''}</Text>
             <View className="mt-3 flex-row flex-wrap">
               {[5000, 20000, 100000, 500000].map((n) => (
-                <Chip key={n} label={`₦${n.toLocaleString()}`} active={amt === n} onPress={() => setAmount(String(n))} />
+                <Chip key={n} label={formatMoneyShort(n)} active={amt === n} onPress={() => setAmount(String(n))} />
               ))}
             </View>
             <View className="mt-1 border-t border-slate-100 pt-3">
@@ -326,6 +353,7 @@ export function Receipt({ tx, onDone }: { tx: Transaction; onDone: () => void })
             ))
           )}
         </Card>
+        {tx.prembly && <PremblyResultCard result={tx.prembly} />}
         <Pressable onPress={() => setRaw(!raw)} className="mt-4 flex-row items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3">
           <Text className="font-semibold text-brand-900">Raw monitoring request / response</Text>
           <Ionicons name={raw ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />

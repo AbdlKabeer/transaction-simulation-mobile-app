@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { DEFAULT_RULES, SEED_BENEFICIARIES, STARTING_BALANCE } from './config';
+import { DEFAULT_RULES, formatMoneyShort, getCurrency, SEED_BENEFICIARIES, setCurrency, STARTING_BALANCE } from './config';
 import { evaluate } from './engine';
-import { Account, Beneficiary, Channel, LogEvent, RuleConfig, Transaction } from './types';
+import { Account, Beneficiary, Channel, LogEvent, PremblyResult, RuleConfig, Transaction } from './types';
 
 interface Persisted {
   account: Account | null;
@@ -27,11 +27,12 @@ export interface SendInput {
 
 interface Store extends Persisted {
   ready: boolean;
-  login: (name: string, email: string) => void;
+  login: (name: string, email: string, currency?: string) => void;
   logout: () => void;
   send: (input: SendInput) => Transaction | string;
   recordFailedPin: () => void;
   logScenario: (summary: string) => void;
+  attachPrembly: (transactionId: string, result: PremblyResult) => void;
   setRules: (r: RuleConfig) => void;
   resetRules: () => void;
   resetSession: () => void;
@@ -73,7 +74,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     AsyncStorage.getItem(KEY)
-      .then((raw) => raw && commit(() => mergeSaved(JSON.parse(raw))))
+      .then((raw) => {
+        if (!raw) return;
+        const saved = mergeSaved(JSON.parse(raw));
+        setCurrency(saved.account?.currency); // before the first screen draws
+        commit(() => saved);
+      })
       .catch(() => {})
       .finally(() => setReady(true));
   }, [commit]);
@@ -83,17 +89,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [state, ready]);
 
   const login = useCallback(
-    (name: string, email: string) =>
+    (name: string, email: string, currency?: string) => {
+      setCurrency(currency);
       commit((s) =>
         s.account
           ? s
           : fresh({
               name,
               email,
+              currency: getCurrency(),
               accountNumber: String(Math.floor(1_000_000_000 + Math.random() * 8_999_999_999)),
               balance: STARTING_BALANCE,
             }),
-      ),
+      );
+    },
     [commit],
   );
 
@@ -138,7 +147,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         timestamp: new Date(now).toISOString(),
         effectiveTimestamp: new Date(effectiveAt).toISOString(),
         amount: input.amount,
-        currency: 'NGN',
+        currency: getCurrency(),
         channel: input.channel,
         country: input.country,
         device: { status: newDevice ? 'NEW' : 'KNOWN' },
@@ -189,7 +198,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             },
             transactions: [tx, ...s.transactions],
           },
-          { type: 'TRANSACTION', summary: `${tx.decision} · ₦${tx.amount.toLocaleString()} → ${tx.beneficiaryName}`, request, response },
+          { type: 'TRANSACTION', summary: `${tx.decision} · ${formatMoneyShort(tx.amount)} → ${tx.beneficiaryName}`, request, response },
         ),
       );
       return tx;
@@ -214,6 +223,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [commit],
   );
 
+  const attachPrembly = useCallback(
+    (transactionId: string, result: PremblyResult) =>
+      commit((s) => {
+        const next = { ...s, transactions: s.transactions.map((t) => (t.id === transactionId ? { ...t, prembly: result } : t)) };
+        if (result.status === 'pending') return next;
+        const summary =
+          result.status === 'error'
+            ? `Prembly TM · ${result.error ?? 'error'}`
+            : `Prembly TM · ${result.decision ?? '—'} · score ${result.riskScore ?? '—'}${result.deviceSessionUsed ? ' · device session used' : ''}`;
+        return pushEvent(next, { type: 'PREMBLY', summary, request: result.request, response: result.response ?? undefined });
+      }),
+    [commit],
+  );
   const logScenario = useCallback((summary: string) => commit((s) => pushEvent(s, { type: 'SCENARIO', summary })), [commit]);
   const setRules = useCallback((rules: RuleConfig) => commit((s) => ({ ...s, rules })), [commit]);
   const resetRules = useCallback(() => commit((s) => ({ ...s, rules: DEFAULT_RULES })), [commit]);
@@ -223,8 +245,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ ...state, ready, login, logout, send, recordFailedPin, logScenario, setRules, resetRules, resetSession }),
-    [state, ready, login, logout, send, recordFailedPin, logScenario, setRules, resetRules, resetSession],
+    () => ({ ...state, ready, login, logout, send, recordFailedPin, logScenario, attachPrembly, setRules, resetRules, resetSession }),
+    [state, ready, login, logout, send, recordFailedPin, logScenario, attachPrembly, setRules, resetRules, resetSession],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
