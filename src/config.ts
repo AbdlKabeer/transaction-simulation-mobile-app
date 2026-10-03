@@ -19,7 +19,7 @@ export const DEFAULT_RULES: RuleConfig = {
 };
 
 export const SEED_BENEFICIARIES = [
-  { id: 'b1', name: 'Adaeze Okafor', bank: 'Nova Bank', accountNumber: '0123456789' },
+  { id: 'b1', name: 'Adaeze Okafor', bank: 'Pueblo Bank', accountNumber: '0123456789' },
   { id: 'b2', name: 'Tunde Bakare', bank: 'GTBank', accountNumber: '0234567891' },
   { id: 'b3', name: 'Sunrise Supplies Ltd', bank: 'Access Bank', accountNumber: '1029384756' },
 ];
@@ -30,7 +30,7 @@ export const formatMoney = (n: number) =>
 export const DEMO_PIN = '1234';
 
 export const BANKS = [
-  'Nova Bank', 'Access Bank', 'GTBank', 'Zenith Bank', 'First Bank', 'UBA', 'Opay', 'Kuda', 'Moniepoint', 'Sterling Bank',
+  'Pueblo Bank', 'Access Bank', 'GTBank', 'Zenith Bank', 'First Bank', 'UBA', 'Opay', 'Kuda', 'Moniepoint', 'Sterling Bank',
 ];
 
 const MOCK_NAMES = [

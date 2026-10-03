@@ -10,7 +10,7 @@ export function Login() {
 
   return (
     <View className="flex-1 justify-center bg-brand-900 px-6">
-      <Text className="text-4xl font-extrabold text-white">Nova Bank</Text>
+      <Text className="text-4xl font-extrabold text-white">Pueblo Bank</Text>
       <Text className="mb-8 mt-1 text-base text-brand-100">Transaction monitoring sandbox</Text>
       <View className="rounded-2xl bg-white p-5">
         <Text className="mb-4 text-sm text-slate-600">

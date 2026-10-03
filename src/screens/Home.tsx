@@ -7,11 +7,11 @@ import { formatMoney } from '../config';
 import { useStore } from '../store';
 
 type Icon = React.ComponentProps<typeof Ionicons>['name'];
-export type SendPreset = 'bank' | 'nova' | undefined;
+export type SendPreset = 'bank' | 'own' | undefined;
 export type Tab = 'home' | 'send' | 'activity' | 'monitor';
 
-const ACTIONS: { label: string; icon: Icon; action: 'nova' | 'bank' | 'activity' | 'monitor' | 'soon' }[] = [
-  { label: 'To Nova Bank', icon: 'person-outline', action: 'nova' },
+const ACTIONS: { label: string; icon: Icon; action: 'own' | 'bank' | 'activity' | 'monitor' | 'soon' }[] = [
+  { label: 'To Pueblo Bank', icon: 'person-outline', action: 'own' },
   { label: 'To Bank', icon: 'business-outline', action: 'bank' },
   { label: 'Activity', icon: 'receipt-outline', action: 'activity' },
   { label: 'Monitoring', icon: 'shield-checkmark-outline', action: 'monitor' },
@@ -28,7 +28,7 @@ export function Home({ go }: { go: (tab: Tab, preset?: SendPreset) => void }) {
   const flagged = transactions.filter((t) => t.decision !== 'ALLOWED').length;
 
   const run = (a: (typeof ACTIONS)[number]['action']) => {
-    if (a === 'nova' || a === 'bank') go('send', a);
+    if (a === 'own' || a === 'bank') go('send', a);
     else if (a === 'activity' || a === 'monitor') go(a);
     else Alert.alert('Not in the sandbox', 'Only transfers are simulated in this test app.');
   };
@@ -61,7 +61,7 @@ export function Home({ go }: { go: (tab: Tab, preset?: SendPreset) => void }) {
         </View>
         <Text className="mt-1 text-4xl font-extrabold text-white">{hidden ? '₦ ••••••' : formatMoney(account.balance)}</Text>
         <View className="mt-4 flex-row items-center justify-between">
-          <Text className="text-xs text-brand-100">Nova Bank · {account.accountNumber}</Text>
+          <Text className="text-xs text-brand-100">Pueblo Bank · {account.accountNumber}</Text>
           <Pressable onPress={() => go('send')} className="flex-row items-center rounded-full bg-brand-600 px-4 py-2">
             <Ionicons name="add" size={16} color="#fff" />
             <Text className="ml-1 text-sm font-semibold text-white">Transfer</Text>

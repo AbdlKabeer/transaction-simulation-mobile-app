@@ -31,7 +31,7 @@ interface Store extends Persisted {
   resetSession: () => void;
 }
 
-const KEY = 'nova-sandbox-v1';
+const KEY = 'pueblo-sandbox-v1';
 const Ctx = createContext<Store | null>(null);
 
 const seed = (): Beneficiary[] =>

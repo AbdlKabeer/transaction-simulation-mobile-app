@@ -1,4 +1,4 @@
-# Nova Bank — Transaction Monitoring Sandbox
+# Pueblo Bank — Transaction Monitoring Sandbox
 
 A mock mobile banking app (Expo + React Native + NativeWind/Tailwind) that customers can use to make
 test transfers and see how transaction-monitoring rules react. No real money or backend: all state lives
