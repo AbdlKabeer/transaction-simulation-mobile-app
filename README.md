@@ -17,8 +17,9 @@ npx tsc --noEmit   # typecheck
 ## What it does
 
 - Login with any name/email → demo account with ₦2,000,000.
-- Send money to seeded or newly added beneficiaries.
-- **Simulation controls** on the Send screen: channel, time of day, originating country.
+- OPay-style home (balance card with hide toggle, shortcut grid) and a full transfer flow: bank + account number (name lookup) → amount → confirm → PIN (sandbox PIN `1234`) → processing → receipt with the monitoring result.
+- Sending to a new account number creates a new beneficiary, which can trigger the new-beneficiary rule.
+- **Test conditions** on the amount step: channel, time of day, originating country.
 - Every transfer is scored by `src/engine.ts` and ends ALLOWED / FLAGGED / BLOCKED, with the triggered rules shown.
 - **Monitoring** tab: alert list, per-rule toggles and thresholds, score cut-offs, reset buttons.
 

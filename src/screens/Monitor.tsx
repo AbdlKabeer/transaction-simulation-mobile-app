@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
-import { Badge, Button, Card, SectionTitle } from '../components/ui';
+import { Badge, Button, Card, ScreenHeader, SectionTitle } from '../components/ui';
 import { formatMoney } from '../config';
 import { useStore } from '../store';
 import { RuleConfig } from '../types';
@@ -46,8 +46,9 @@ export function Monitor() {
   const money = (n: number) => formatMoney(n).replace(/\.00$/, '');
 
   return (
+    <View className="flex-1">
+    <ScreenHeader title="Monitoring" />
     <ScrollView className="flex-1" contentContainerClassName="p-5 pb-10">
-      <Text className="text-2xl font-bold text-slate-900">Monitoring</Text>
 
       <SectionTitle>Alerts ({alerts.length})</SectionTitle>
       <Card>
@@ -121,5 +122,6 @@ export function Monitor() {
         />
       </View>
     </ScrollView>
+    </View>
   );
 }

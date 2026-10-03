@@ -23,6 +23,8 @@ export interface Transaction {
   amount: number;
   beneficiaryId: string;
   beneficiaryName: string;
+  beneficiaryBank: string;
+  beneficiaryAccount: string;
   narration: string;
   channel: Channel;
   country: string;

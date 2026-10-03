@@ -7,6 +7,8 @@ export interface Candidate {
   beneficiary: Beneficiary;
   effectiveAt: number;
   country: string;
+  /** Real wall-clock time, used for beneficiary age (effectiveAt may be simulated). */
+  now: number;
 }
 
 const MIN = 60_000;
@@ -67,7 +69,7 @@ export function evaluate(
   }
 
   if (cfg.newBeneficiary.enabled && c.amount >= cfg.newBeneficiary.threshold) {
-    const ageMin = (c.effectiveAt - c.beneficiary.createdAt) / MIN;
+    const ageMin = (c.now - c.beneficiary.createdAt) / MIN;
     if (ageMin < cfg.newBeneficiary.ageMinutes) {
       hits.push({
         ruleId: 'NEW_BENEFICIARY',

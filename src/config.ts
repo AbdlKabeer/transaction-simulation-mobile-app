@@ -26,3 +26,26 @@ export const SEED_BENEFICIARIES = [
 
 export const formatMoney = (n: number) =>
   `${CURRENCY}${n.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+export const DEMO_PIN = '1234';
+
+export const BANKS = [
+  'Nova Bank', 'Access Bank', 'GTBank', 'Zenith Bank', 'First Bank', 'UBA', 'Opay', 'Kuda', 'Moniepoint', 'Sterling Bank',
+];
+
+const MOCK_NAMES = [
+  'Chinedu Eze', 'Fatima Bello', 'Ngozi Adeyemi', 'Ibrahim Musa', 'Blessing Udo',
+  'Emeka Nwosu', 'Funke Alabi', 'Yusuf Danjuma', 'Kemi Ogunleye', 'Samuel Etim',
+];
+
+/** Fake "name enquiry": known payees resolve to their name, anything else gets a stable mock name. */
+export function resolveAccountName(
+  bank: string,
+  accountNumber: string,
+  known: { name: string; bank: string; accountNumber: string }[],
+): string {
+  const hit = known.find((k) => k.accountNumber === accountNumber && k.bank === bank);
+  if (hit) return hit.name;
+  const sum = accountNumber.split('').reduce((a, d) => a + Number(d), 0);
+  return MOCK_NAMES[sum % MOCK_NAMES.length].toUpperCase();
+}

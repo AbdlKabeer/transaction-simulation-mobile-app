@@ -12,7 +12,7 @@ interface Persisted {
 }
 
 export interface SendInput {
-  beneficiaryId: string;
+  recipient: { name: string; bank: string; accountNumber: string };
   amount: number;
   narration: string;
   channel: Channel;
@@ -25,7 +25,6 @@ interface Store extends Persisted {
   ready: boolean;
   login: (name: string, email: string) => void;
   logout: () => void;
-  addBeneficiary: (b: Omit<Beneficiary, 'id' | 'createdAt'>) => Beneficiary;
   send: (input: SendInput) => Transaction | string;
   setRules: (r: RuleConfig) => void;
   resetRules: () => void;
@@ -76,21 +75,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => setState((s) => ({ ...s, account: null })), []);
 
-  const addBeneficiary = useCallback((b: Omit<Beneficiary, 'id' | 'createdAt'>) => {
-    const nb = { ...b, id: `b${Date.now()}`, createdAt: Date.now() };
-    setState((s) => ({ ...s, beneficiaries: [nb, ...s.beneficiaries] }));
-    return nb;
-  }, []);
-
   const send = useCallback(
     (input: SendInput): Transaction | string => {
       const { account, beneficiaries, transactions, rules } = state;
-      const ben = beneficiaries.find((b) => b.id === input.beneficiaryId);
-      if (!account || !ben) return 'Choose a beneficiary.';
+      if (!account) return 'Not logged in.';
+      const now = Date.now();
+      const existing = beneficiaries.find(
+        (b) => b.accountNumber === input.recipient.accountNumber && b.bank === input.recipient.bank,
+      );
+      const ben: Beneficiary = existing ?? { ...input.recipient, id: `b${now}`, createdAt: now };
       if (!(input.amount > 0)) return 'Enter an amount greater than zero.';
       if (input.amount > account.balance) return 'Insufficient funds.';
 
-      const now = Date.now();
       let effectiveAt = now;
       if (input.simulatedHour !== null) {
         const d = new Date(now);
@@ -98,7 +94,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         effectiveAt = d.getTime();
       }
       const result = evaluate(
-        { amount: input.amount, beneficiary: ben, effectiveAt, country: input.country },
+        { amount: input.amount, beneficiary: ben, effectiveAt, country: input.country, now },
         transactions,
         rules,
       );
@@ -109,6 +105,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         amount: input.amount,
         beneficiaryId: ben.id,
         beneficiaryName: ben.name,
+        beneficiaryBank: ben.bank,
+        beneficiaryAccount: ben.accountNumber,
         narration: input.narration,
         channel: input.channel,
         country: input.country,
@@ -116,6 +114,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       };
       setState((s) => ({
         ...s,
+        beneficiaries: existing ? s.beneficiaries : [ben, ...s.beneficiaries],
         account: s.account && {
           ...s.account,
           balance: tx.decision === 'BLOCKED' ? s.account.balance : s.account.balance - tx.amount,
@@ -139,8 +138,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ ...state, ready, login, logout, addBeneficiary, send, setRules, resetRules, resetSession }),
-    [state, ready, login, logout, addBeneficiary, send, setRules, resetRules, resetSession],
+    () => ({ ...state, ready, login, logout, send, setRules, resetRules, resetSession }),
+    [state, ready, login, logout, send, setRules, resetRules, resetSession],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
