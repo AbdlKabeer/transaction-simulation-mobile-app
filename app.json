@@ -23,6 +23,15 @@
     "web": {
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Prembly Bank Sandbox to use your location for security and transaction monitoring.",
+          "locationWhenInUsePermission": "Allow Prembly Bank Sandbox to use your location for security and transaction monitoring."
+        }
+      ]
+    ]
   }
 }

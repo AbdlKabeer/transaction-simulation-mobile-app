@@ -1,0 +1,18 @@
+{
+  "default_branch": "claude/admiring-planck-cn77mi",
+  "branches": [
+    "claude/admiring-planck-cn77mi",
+    "feat/tm-sdk-device-session",
+    "origin"
+  ],
+  "parent": {
+    "claude/admiring-planck-cn77mi": null,
+    "feat/tm-sdk-device-session": "claude/admiring-planck-cn77mi",
+    "origin": "claude/admiring-planck-cn77mi"
+  },
+  "order": [
+    "claude/admiring-planck-cn77mi",
+    "feat/tm-sdk-device-session",
+    "origin"
+  ]
+}
