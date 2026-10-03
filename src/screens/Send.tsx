@@ -24,7 +24,7 @@ const Label = ({ children }: { children: React.ReactNode }) => (
 export function Send({ preset }: { preset?: SendPreset }) {
   const { beneficiaries, send, account } = useStore();
   const [step, setStep] = useState<Step>('recipient');
-  const [bank, setBank] = useState(preset === 'own' ? 'Pueblo Bank' : '');
+  const [bank, setBank] = useState(preset === 'own' ? 'Prembly Bank' : '');
   const [acct, setAcct] = useState('');
   const [bankOpen, setBankOpen] = useState(false);
   const [amount, setAmount] = useState('');
@@ -201,7 +201,7 @@ export function Send({ preset }: { preset?: SendPreset }) {
   const recents = beneficiaries.slice(0, 5);
   return (
     <View className="flex-1 bg-app">
-      <ScreenHeader title={preset === 'own' ? 'Transfer to Pueblo Bank' : 'Transfer to bank account'} />
+      <ScreenHeader title={preset === 'own' ? 'Transfer to Prembly Bank' : 'Transfer to bank account'} />
       <ScrollView contentContainerClassName="p-5 pb-10" keyboardShouldPersistTaps="handled">
         <Card>
           <Label>Bank</Label>

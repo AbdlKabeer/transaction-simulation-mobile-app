@@ -11,7 +11,7 @@ export type SendPreset = 'bank' | 'own' | undefined;
 export type Tab = 'home' | 'send' | 'activity' | 'monitor';
 
 const ACTIONS: { label: string; icon: Icon; action: 'own' | 'bank' | 'activity' | 'monitor' | 'soon' }[] = [
-  { label: 'To Pueblo Bank', icon: 'person-outline', action: 'own' },
+  { label: 'To Prembly Bank', icon: 'person-outline', action: 'own' },
   { label: 'To Bank', icon: 'business-outline', action: 'bank' },
   { label: 'Activity', icon: 'receipt-outline', action: 'activity' },
   { label: 'Monitoring', icon: 'shield-checkmark-outline', action: 'monitor' },
@@ -61,7 +61,7 @@ export function Home({ go }: { go: (tab: Tab, preset?: SendPreset) => void }) {
         </View>
         <Text className="mt-1 text-4xl font-extrabold text-white">{hidden ? '₦ ••••••' : formatMoney(account.balance)}</Text>
         <View className="mt-4 flex-row items-center justify-between">
-          <Text className="text-xs text-brand-100">Pueblo Bank · {account.accountNumber}</Text>
+          <Text className="text-xs text-brand-100">Prembly Bank · {account.accountNumber}</Text>
           <Pressable onPress={() => go('send')} className="flex-row items-center rounded-full bg-brand-600 px-4 py-2">
             <Ionicons name="add" size={16} color="#fff" />
             <Text className="ml-1 text-sm font-semibold text-white">Transfer</Text>
